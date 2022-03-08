@@ -181,8 +181,16 @@ func ProcessBookmark(req ProcessRequest) (book model.Bookmark, isFatalErr bool, 
 
 	archivePath := fp.Join(req.DataDir, "archive", fmt.Sprintf("%d", book.ID))
 
-	// optsString := "-a -e -j -v -F"
-	optsString := req.MonolithOpts
+  optsString := strings.TrimSpace(req.MonolithOpts)
+  if optsString == "" {
+    // -a: Exclude audio sources
+    // -e: Ignore network errors
+    // -j: Exclude JavaScript
+    // -v: Exclude videos
+    // -F: Exclude web fonts
+	  optsString = "-a -e -j -v -F"
+  }
+
 	monolithOpts := strings.Split(optsString, " ")
 	monolithCmd := []string{book.URL}
 	monolithCmd = append(monolithCmd, monolithOpts...)

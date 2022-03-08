@@ -611,6 +611,10 @@ export default {
 					label: "Keep the old title and excerpt",
 					type: "check",
 					value: this.appOptions.keepMetadata,
+        }, {
+          name: "monolithOpts",
+          value: "-a -e -j -v -F",
+          label: "Monolith options",
 				}, {
 					name: "createArchive",
 					label: "Update archive as well",
@@ -624,6 +628,7 @@ export default {
 						ids: ids,
 						createArchive: data.createArchive,
 						keepMetadata: data.keepMetadata,
+            monolithOpts: data.monolithOpts,
 					};
 
 					this.dialog.loading = true;

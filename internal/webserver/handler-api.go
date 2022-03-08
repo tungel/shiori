@@ -450,6 +450,7 @@ func (h *handler) apiUpdateCache(w http.ResponseWriter, r *http.Request, ps http
 		IDs           []int `json:"ids"`
 		KeepMetadata  bool  `json:"keepMetadata"`
 		CreateArchive bool  `json:"createArchive"`
+		MonolithOpts  string `json:"monolithOpts"`
 	}{}
 
 	err = json.NewDecoder(r.Body).Decode(&request)
@@ -512,6 +513,7 @@ func (h *handler) apiUpdateCache(w http.ResponseWriter, r *http.Request, ps http
 				ContentType: contentType,
 				KeepTitle:   keepMetadata,
 				KeepExcerpt: keepMetadata,
+        MonolithOpts: request.MonolithOpts,
 			}
 
 			book, _, err = core.ProcessBookmark(request)

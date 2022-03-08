@@ -114,7 +114,11 @@ func (h *handler) serveBookmarkContent(w http.ResponseWriter, r *http.Request, p
 
 	// Check if it has archive.
 	archivePath := fp.Join(h.DataDir, "archive", strID)
-	if fileExists(archivePath) {
+	if fileExists(archivePath + ".html.gz") {
+		bookmark.HasArchive = true
+	} else if fileExists(archivePath) {
+		log.Printf("Has archive at: %s", archivePath)
+
 		bookmark.HasArchive = true
 
 		// Open archive, look in cache first
@@ -262,10 +266,60 @@ func (h *handler) serveBookmarkArchive(w http.ResponseWriter, r *http.Request, p
 	var archive *warc.Archive
 	cacheData, found := h.ArchiveCache.Get(strID)
 
+	archivePath := fp.Join(h.DataDir, "archive", strID)
+	log.Printf("Serving archivePath %s", archivePath)
+	htmlFilePath := archivePath + ".html.gz"
+	if fileExists(htmlFilePath) {
+		log.Printf("SingleFile html exist %s", archivePath)
+		// file, err := os.Open(htmlFilePath)
+
+		dat, err := os.ReadFile(htmlFilePath)
+		// Extract gzip
+		buffer := bytes.NewBuffer(dat)
+		gzip_reader, err := gzip.NewReader(buffer)
+		checkError(err)
+
+		// Set response header
+		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("Content-Type", "text/html")
+
+		// Parse gzipped content
+		doc, err := goquery.NewDocumentFromReader(gzip_reader)
+		checkError(err)
+
+		// Add Shiori overlay
+		tplOutput := bytes.NewBuffer(nil)
+		err = h.templates["archive"].Execute(tplOutput, &bookmark)
+		checkError(err)
+
+		archiveCSSPath := path.Join(h.RootPath, "/css/archive.css")
+		sourceSansProCSSPath := path.Join(h.RootPath, "/css/source-sans-pro.min.css")
+
+		docHead := doc.Find("head")
+		docHead.PrependHtml(`<meta charset="UTF-8">`)
+		docHead.AppendHtml(`<link href="` + archiveCSSPath + `" rel="stylesheet">`)
+		docHead.AppendHtml(`<link href="` + sourceSansProCSSPath + `" rel="stylesheet">`)
+		doc.Find("body").PrependHtml(tplOutput.String())
+
+		// Revert back to HTML
+		outerHTML, err := goquery.OuterHtml(doc.Selection)
+		checkError(err)
+
+		// Gzip it again and send to response writer
+		gzipWriter := gzip.NewWriter(w)
+		if _, err := gzipWriter.Write([]byte(outerHTML)); err != nil {
+			log.Printf("error writting gzip file: %s", err)
+		}
+		gzipWriter.Flush()
+		gzip_reader.Close()
+		return
+	}
+
 	if found {
 		archive = cacheData.(*warc.Archive)
 	} else {
-		archivePath := fp.Join(h.DataDir, "archive", strID)
+		// archivePath := fp.Join(h.DataDir, "archive", strID)
+
 		archive, err = warc.Open(archivePath)
 		checkError(err)
 

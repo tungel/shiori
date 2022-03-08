@@ -2,15 +2,19 @@ package core
 
 import (
 	"bytes"
+	"compress/gzip"
+	// "context"
 	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/jpeg"
 	"io"
+	// "log"
 	"math"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	fp "path/filepath"
 	"strconv"
@@ -18,8 +22,9 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/go-shiori/go-readability"
+	// "github.com/go-shiori/obelisk"
 	"github.com/go-shiori/shiori/internal/model"
-	"github.com/go-shiori/warc"
+	// "github.com/go-shiori/warc"
 
 	// Add support for png
 	_ "image/png"
@@ -126,27 +131,84 @@ func ProcessBookmark(req ProcessRequest) (book model.Bookmark, isFatalErr bool, 
 	}
 
 	// If needed, create offline archive as well
-	if book.CreateArchive {
-		archivePath := fp.Join(req.DataDir, "archive", fmt.Sprintf("%d", book.ID))
-		os.Remove(archivePath)
+	// if book.CreateArchive {
+	// 	archivePath := fp.Join(req.DataDir, "archive", fmt.Sprintf("%d", book.ID))
+	// 	log.Printf("Archive path: " + archivePath)
+	// 	os.Remove(archivePath)
 
-		archivalRequest := warc.ArchivalRequest{
-			URL:         book.URL,
-			Reader:      archivalInput,
-			ContentType: contentType,
-			UserAgent:   userAgent,
-			LogEnabled:  req.LogArchival,
-		}
+	// 	archivalRequest := warc.ArchivalRequest{
+	// 		URL:         book.URL,
+	// 		Reader:      archivalInput,
+	// 		ContentType: contentType,
+	// 		UserAgent:   userAgent,
+	// 		LogEnabled:  req.LogArchival,
+	// 	}
 
-		err = warc.NewArchive(archivalRequest, archivePath)
-		if err != nil {
-			return book, false, fmt.Errorf("failed to create archive: %v", err)
-		}
+	// 	err = warc.NewArchive(archivalRequest, archivePath)
+	// 	if err != nil {
+	// 		return book, false, fmt.Errorf("failed to create archive: %v", err)
+	// 	}
 
-		book.HasArchive = true
+	// 	book.HasArchive = true
+	// }
+
+	//----------------------------------------------------------------------
+	// Create archive -- this is not working
+	// archivePath := fp.Join(req.DataDir, "archive", fmt.Sprintf("%d", book.ID))
+	// archivalRequest := obelisk.Request{
+	// 	URL: book.URL,
+	// }
+
+	// arc := obelisk.Archiver{EnableLog: true}
+	// arc.Validate()
+
+	// result, _, err := arc.Archive(context.Background(), archivalRequest)
+	// checkError(err)
+
+	// // Create destination file
+	// f, err := os.Create(archivePath)
+	// checkError(err)
+	// defer f.Close()
+
+	// // Create gzipper
+	// gz := gzip.NewWriter(f)
+	// gz.Write(result)
+	// gz.Close()
+
+	//----------------------------------------------------------------------
+
+	archivePath := fp.Join(req.DataDir, "archive", fmt.Sprintf("%d", book.ID))
+	cmd := exec.Command("monolith", book.URL, "-o", archivePath)
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err_cmd := cmd.Run()
+
+	dat, err := os.ReadFile(archivePath)
+
+	// Create gzipper
+	file, err := os.Create(archivePath + ".html.gz")
+	defer file.Close()
+	gz := gzip.NewWriter(file)
+	gz.Write(dat)
+	gz.Close()
+
+	book.HasArchive = true
+
+	if err_cmd != nil {
+		return book, false, fmt.Errorf("failed to create archive: %v", err)
 	}
 
+	// delete the original file downloaded by monolith
+	os.Remove(archivePath)
+
 	return book, false, nil
+}
+
+func checkError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
 func downloadBookImage(url, dstPath string) error {

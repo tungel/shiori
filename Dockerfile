@@ -10,7 +10,10 @@ FROM ghcr.io/ghcri/alpine:3.15
 LABEL org.opencontainers.image.source https://github.com/go-shiori/shiori
 COPY --from=builder /src/shiori /usr/bin/
 RUN addgroup -g 1000 shiori \
- && adduser -D -h /shiori -g '' -G shiori -u 1000 shiori
+  && adduser -D -h /shiori -g '' -G shiori -u 1000 shiori
+
+ADD monolith /usr/bin/
+
 USER shiori
 WORKDIR /shiori
 EXPOSE 8080

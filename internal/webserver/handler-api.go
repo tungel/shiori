@@ -198,7 +198,7 @@ func (h *handler) apiGetBookmarks(w http.ResponseWriter, r *http.Request, ps htt
 			bookmarks[i].ImageURL = path.Join(h.RootPath, "bookmark", strID, "thumb")
 		}
 
-		if fileExists(archivePath) {
+		if fileExists(archivePath) || fileExists(archivePath+".html.gz") {
 			bookmarks[i].HasArchive = true
 		}
 	}

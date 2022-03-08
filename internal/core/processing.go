@@ -10,7 +10,7 @@ import (
 	"image/draw"
 	"image/jpeg"
 	"io"
-	// "log"
+	"log"
 	"math"
 	"net/url"
 	"os"
@@ -32,13 +32,14 @@ import (
 
 // ProcessRequest is the request for processing bookmark.
 type ProcessRequest struct {
-	DataDir     string
-	Bookmark    model.Bookmark
-	Content     io.Reader
-	ContentType string
-	KeepTitle   bool
-	KeepExcerpt bool
-	LogArchival bool
+	DataDir      string
+	Bookmark     model.Bookmark
+	Content      io.Reader
+	ContentType  string
+	KeepTitle    bool
+	KeepExcerpt  bool
+	LogArchival  bool
+	MonolithOpts string
 }
 
 // ProcessBookmark process the bookmark and archive it if needed.
@@ -178,7 +179,16 @@ func ProcessBookmark(req ProcessRequest) (book model.Bookmark, isFatalErr bool, 
 	//----------------------------------------------------------------------
 
 	archivePath := fp.Join(req.DataDir, "archive", fmt.Sprintf("%d", book.ID))
-	cmd := exec.Command("monolith", book.URL, "-o", archivePath)
+
+	optsString := "-a -e -j -v -F"
+	monolithOpts := strings.Split(optsString, " ")
+	monolithCmd := []string{book.URL}
+	monolithCmd = append(monolithCmd, monolithOpts...)
+	monolithCmd = append(monolithCmd, "-o", archivePath)
+	log.Printf("Monolith command: %v", monolithCmd)
+
+	// cmd := exec.Command("monolith", book.URL, "-o", archivePath)
+	cmd := exec.Command("monolith", monolithCmd...)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out

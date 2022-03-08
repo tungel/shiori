@@ -177,10 +177,12 @@ func ProcessBookmark(req ProcessRequest) (book model.Bookmark, isFatalErr bool, 
 	// gz.Close()
 
 	//----------------------------------------------------------------------
+	log.Printf("Monolith opts are: %s", req.MonolithOpts)
 
 	archivePath := fp.Join(req.DataDir, "archive", fmt.Sprintf("%d", book.ID))
 
-	optsString := "-a -e -j -v -F"
+	// optsString := "-a -e -j -v -F"
+	optsString := req.MonolithOpts
 	monolithOpts := strings.Split(optsString, " ")
 	monolithCmd := []string{book.URL}
 	monolithCmd = append(monolithCmd, monolithOpts...)

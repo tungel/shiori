@@ -24,6 +24,7 @@ type Bookmark struct {
 	HasArchive    bool   `json:"hasArchive"`
 	Tags          []Tag  `json:"tags"`
 	CreateArchive bool   `json:"createArchive"`
+	MonolithOpts  string `json:"monolithOpts"`
 }
 
 // Account is person that allowed to access web interface.

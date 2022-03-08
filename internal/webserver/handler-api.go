@@ -26,10 +26,11 @@ func downloadBookmarkContent(book *model.Bookmark, dataDir string, request *http
 	content, contentType, err := core.DownloadBookmark(book.URL)
 	if err == nil && content != nil {
 		request := core.ProcessRequest{
-			DataDir:     dataDir,
-			Bookmark:    *book,
-			Content:     content,
-			ContentType: contentType,
+			DataDir:      dataDir,
+			Bookmark:     *book,
+			Content:      content,
+			ContentType:  contentType,
+			MonolithOpts: book.MonolithOpts,
 		}
 
 		result, isFatalErr, err := core.ProcessBookmark(request)
@@ -257,6 +258,7 @@ type apiInsertBookmarkPayload struct {
 	CreateArchive bool        `json:"createArchive"`
 	MakePublic    int         `json:"public"`
 	Async         bool        `json:"async"`
+	MonolithOpts  string      `json:"monolithOpts"`
 }
 
 // newApiInsertBookmarkPayload
@@ -286,6 +288,7 @@ func (h *handler) apiInsertBookmark(w http.ResponseWriter, r *http.Request, ps h
 		Tags:          payload.Tags,
 		Public:        payload.MakePublic,
 		CreateArchive: payload.CreateArchive,
+		MonolithOpts:  payload.MonolithOpts,
 	}
 
 	// Create bookmark ID

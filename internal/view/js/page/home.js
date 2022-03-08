@@ -365,6 +365,10 @@ export default {
 					label: "Comma separated tags (optional)",
 					separator: ",",
 					dictionary: this.tags.map(tag => tag.name)
+        }, {
+          name: "monolithOpts",
+          value: "-a -e -j -v -F",
+          label: "Monolith options",
 				}, {
 					name: "createArchive",
 					label: "Create archive",
@@ -405,6 +409,7 @@ export default {
 						public: data.makePublic ? 1 : 0,
 						tags: tags,
 						createArchive: data.createArchive,
+            monolithOpts: data.monolithOpts,
 					};
 
 					this.dialog.loading = true;

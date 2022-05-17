@@ -41,3 +41,14 @@ Shiori is distributed under the terms of the [MIT license][mit], which means you
 [mode-comparison]: https://raw.githubusercontent.com/go-shiori/shiori/master/docs/readme/comparison.png
 [pocket]: https://getpocket.com/
 [256]: https://github.com/go-shiori/shiori/issues/256
+
+# Monolith/SingleFile
+
+Manually create an archive from SingleFile:
+
+```
+tar czvf 1730.html.gz 1730.html
+```
+
+Then copy the `.gz` file to the `archive` folder.
+
